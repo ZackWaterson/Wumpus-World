@@ -1,0 +1,5 @@
+Bug in findLeastDangerous() where closest was being improperly set which caused some avoidable deaths.(Fixed)
+
+Bug where the agent will shoot the wrong square when going to shoot a confirmed Wumpus.
+
+Bug that is causing findPath() to go into an infinte loop.
