@@ -6,11 +6,14 @@
 
 import javax.swing.*;
 import java.awt.*;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 
 public class Agent
 {
     final int BOARD_SIZE;
+    //used to track how many boards have been played
+    private int boardsPlayed;
     final Board board;
     private int score, currentSquare;
     //a list of booleans to track a few things
@@ -19,6 +22,7 @@ public class Agent
     //some icons used depending on which way the agent is facing
     private ImageIcon agentNorth, agentEast, agentSouth, agentWest;
     private Square[] squares;
+    DecimalFormat fmt;
     JTextArea actionLog;
     Brain brain;
 
@@ -30,6 +34,8 @@ public class Agent
         squares = sqrs;
         actionLog = log;
         score = 0;
+        fmt = new DecimalFormat("##.00");
+        boardsPlayed = 0;
         newBoard();
         agentNorth = new ImageIcon(getClass().getResource("/resource/AGENT_NORTH.jpg"));
         agentEast = new ImageIcon(getClass().getResource("/resource/AGENT_EAST.jpg"));
@@ -88,7 +94,7 @@ public class Agent
                         temp = brain.findNearestSafe(currentSquare);
                         if (temp != -1) {
                             appendText("I'm looking for the nearest safe square.");
-                            if (brain.getStraightLine(currentSquare, temp) > 1)
+                            if (brain.getManhattanDistance(currentSquare, temp) > 1)
                             {
                                 path = findPath(temp);
                                 followPath(path);
@@ -101,7 +107,7 @@ public class Agent
                         else {
                             if (brain.checkConfirmedWumpus() && arrow) {
                                 appendText("I'm hunting a confirmed wumpus!");
-                                if (brain.getStraightLine(currentSquare, brain.getWumpusIndex()) > 1)
+                                if (brain.getManhattanDistance(currentSquare, brain.getWumpusIndex()) > 1)
                                 {
                                     path = findPath(brain.getWumpusIndex());
                                     followPath(path);
@@ -115,7 +121,7 @@ public class Agent
                                 if (brain.checkStenchArray() && arrow) {
                                     appendText("I'm hunting a possible wumpus!");
                                     temp = brain.guessWumpus();
-                                    if (brain.getStraightLine(currentSquare, temp) > 1) {
+                                    if (brain.getManhattanDistance(currentSquare, temp) > 1) {
                                         path = findPath(temp);
                                         followPath(path);
                                     }
@@ -129,7 +135,7 @@ public class Agent
                                 else {
                                     temp = brain.findLeastDangerous(currentSquare);
                                     appendText("I need to take a risk!");
-                                    if (brain.getStraightLine(currentSquare, temp) > 1) {
+                                    if (brain.getManhattanDistance(currentSquare, temp) > 1) {
                                         path = findPath(temp);
                                         followPath(path);
                                     }
@@ -180,22 +186,22 @@ public class Agent
         //first we see which ways we can go and create the beginning of each path
         if (brain.checkNorth(currentSquare) && squares[currentSquare + BOARD_SIZE].checkVisited())
         {
-            paths.add(new Path(currentSquare, Direction.NORTH, brain.getStraightLine((currentSquare + BOARD_SIZE), endIndex), BOARD_SIZE));
+            paths.add(new Path(currentSquare, Direction.NORTH, brain.getManhattanDistance((currentSquare + BOARD_SIZE), endIndex), BOARD_SIZE));
         }
 
         if (brain.checkEast(currentSquare) && squares[currentSquare + 1].checkVisited())
         {
-            paths.add(new Path(currentSquare, Direction.EAST, brain.getStraightLine((currentSquare + 1), endIndex), BOARD_SIZE));
+            paths.add(new Path(currentSquare, Direction.EAST, brain.getManhattanDistance((currentSquare + 1), endIndex), BOARD_SIZE));
         }
 
         if (brain.checkSouth(currentSquare) && squares[currentSquare - BOARD_SIZE].checkVisited())
         {
-            paths.add(new Path(currentSquare, Direction.SOUTH, brain.getStraightLine((currentSquare - BOARD_SIZE), endIndex), BOARD_SIZE));
+            paths.add(new Path(currentSquare, Direction.SOUTH, brain.getManhattanDistance((currentSquare - BOARD_SIZE), endIndex), BOARD_SIZE));
         }
 
         if (brain.checkWest(currentSquare) && squares[currentSquare - 1].checkVisited())
         {
-            paths.add(new Path(currentSquare, Direction.WEST, brain.getStraightLine((currentSquare - 1), endIndex), BOARD_SIZE));
+            paths.add(new Path(currentSquare, Direction.WEST, brain.getManhattanDistance((currentSquare - 1), endIndex), BOARD_SIZE));
         }
 
         //these booleans are used when deciding where to expand
@@ -266,42 +272,42 @@ public class Agent
                         switch(i)
                         {
                             case 0:
-                                paths.get(index).addToPath(Direction.NORTH, brain.getStraightLine(paths.get(index).getCurrentSquare() + BOARD_SIZE, endIndex));
+                                paths.get(index).addToPath(Direction.NORTH, brain.getManhattanDistance(paths.get(index).getCurrentSquare() + BOARD_SIZE, endIndex));
                                 break;
                             case 1:
                                 if(!multiplePaths)
                                 {
-                                    paths.get(index).addToPath(Direction.EAST, brain.getStraightLine(paths.get(index).getCurrentSquare() + 1, endIndex));
+                                    paths.get(index).addToPath(Direction.EAST, brain.getManhattanDistance(paths.get(index).getCurrentSquare() + 1, endIndex));
                                 }
                                 else
                                 {
                                     tempPath = new Path(expandingPath, BOARD_SIZE);
                                     paths.add(tempPath);
-                                    paths.get(paths.size() - 1).addToPath(Direction.EAST, brain.getStraightLine(paths.get(index).getCurrentSquare() + 1, endIndex));
+                                    paths.get(paths.size() - 1).addToPath(Direction.EAST, brain.getManhattanDistance(paths.get(index).getCurrentSquare() + 1, endIndex));
                                 }
                                 break;
                             case 2:
                                 if(!multiplePaths)
                                 {
-                                    paths.get(index).addToPath(Direction.SOUTH, brain.getStraightLine(paths.get(index).getCurrentSquare() - BOARD_SIZE, endIndex));
+                                    paths.get(index).addToPath(Direction.SOUTH, brain.getManhattanDistance(paths.get(index).getCurrentSquare() - BOARD_SIZE, endIndex));
                                 }
                                 else
                                 {
                                     tempPath = new Path(expandingPath, BOARD_SIZE);
                                     paths.add(tempPath);
-                                    paths.get(paths.size() - 1).addToPath(Direction.SOUTH, brain.getStraightLine(paths.get(index).getCurrentSquare() - BOARD_SIZE, endIndex));
+                                    paths.get(paths.size() - 1).addToPath(Direction.SOUTH, brain.getManhattanDistance(paths.get(index).getCurrentSquare() - BOARD_SIZE, endIndex));
                                 }
                                 break;
                             case 3:
                                 if(!multiplePaths)
                                 {
-                                    paths.get(index).addToPath(Direction.WEST, brain.getStraightLine(paths.get(index).getCurrentSquare() - 1, endIndex));
+                                    paths.get(index).addToPath(Direction.WEST, brain.getManhattanDistance(paths.get(index).getCurrentSquare() - 1, endIndex));
                                 }
                                 else
                                 {
                                     tempPath = new Path(expandingPath, BOARD_SIZE);
                                     paths.add(tempPath);
-                                    paths.get(paths.size() - 1).addToPath(Direction.WEST, brain.getStraightLine(paths.get(index).getCurrentSquare() - 1, endIndex));
+                                    paths.get(paths.size() - 1).addToPath(Direction.WEST, brain.getManhattanDistance(paths.get(index).getCurrentSquare() - 1, endIndex));
                                 }
                         }
                         multiplePaths = true;
@@ -501,7 +507,8 @@ public class Agent
             squares[currentSquare].toggleGold();
             end = true;
             score += 1000;
-            appendText("I got the gold!\nCurrent score: " + score);
+            appendText("I got the gold!\nCurrent score: " + score  + "\nBoards played: " + boardsPlayed
+                    + "\nAverage score (per board): " + fmt.format((double)score / boardsPlayed) + "\n");
             appendText("Hit Next Move to create a new board.");
             board.repaint();
         }
@@ -550,7 +557,8 @@ public class Agent
     {
         score -= 1000;
         end = true;
-        appendText("I died!\n Current score: " + score + "\n");
+        appendText("I died!\n Current score: " + score  + "\nBoards played: " + boardsPlayed
+                + "\nAverage score (per board): " + fmt.format((double)score / boardsPlayed) + "\n");
     }
 
     //appends text to the action log
@@ -569,6 +577,7 @@ public class Agent
     //moves the agent to the starting square when it begins a new game board
     void newBoard()
     {
+        boardsPlayed++;
         arrow = true;
         end = false;
         currentSquare = 0;

@@ -392,7 +392,7 @@ public class Brain
         {
             if(safe[i] && !squares[i].checkVisited())
             {
-                temp = getStraightLine(agentLocation, i);
+                temp = getManhattanDistance(agentLocation, i);
                 if(temp < closest)
                 {
                     closest = temp;
@@ -408,12 +408,17 @@ public class Brain
     {
         //initialize at 101 because pits and wumpus are set to 100
         //that way the agent will properly suicide if it has no other choice
-        int lowest = 100, closest = 100, index = -1;
-        for (int i = 0; i < squares.length; i++) {
-            if (!safe[i] && breezeArray[i] + stenchArray[i] > 0 && breezeArray[i] + stenchArray[i] <= lowest && getStraightLine(agentLocation, i) <= closest)
+        int lowest = 101, closest = 100, index = -1;
+        for (int i = 0; i < squares.length; i++)
+        {
+            //this checks to make sure the square is not safe, and then that the square has counters on them,
+            //then it checks two things: if the count is lower than the lowest current count, that is the new target square,
+            //or, if the breeze and stench counters are equal, then we pick whichever is closer to the agent
+            if (!safe[i] && breezeArray[i] + stenchArray[i] > 0 && (breezeArray[i] + stenchArray[i] < lowest ||
+                    (breezeArray[i] + stenchArray[i] == lowest && getManhattanDistance(agentLocation, i) <= closest)))
             {
 
-                closest = getStraightLine(agentLocation, i);
+                closest = getManhattanDistance(agentLocation, i);
                 lowest = breezeArray[i] + stenchArray[i];
                 index = i;
             }
@@ -421,8 +426,8 @@ public class Brain
         return index;
     }
 
-    //returns the straight line distance from a square to a square
-    int getStraightLine(int start, int end)
+    //returns the manhattan distance from a square to a square
+    int getManhattanDistance(int start, int end)
     {
         //index / BOARD_SIZE = row
         //index % BOARD_SIZE = column

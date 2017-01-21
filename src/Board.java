@@ -22,13 +22,15 @@ public class Board extends JPanel
     JScrollPane scrollPane;
     // a bunch of icons used in the game
     private ImageIcon wumpusIcon, pitIcon, breezeIcon, stenchIcon, glitterIcon;
-    Random random = new Random();
+    Random random;
     Agent agent;
 
     public Board()
     {
         setPreferredSize(new Dimension(530, 700));
         setLayout(null);
+
+        random = new Random();
 
         nextButton = new JButton("Next Move");
         nextButton.setBounds(65, 420, 180, 25);
@@ -292,7 +294,7 @@ public class Board extends JPanel
                     else
                         System.out.println();
                 }
-                System.out.println("\narrow ==" + agent.arrow);
+                System.out.println("\narrow == " + agent.arrow);
                 System.out.println("\nknownWumpus == " + agent.brain.checkConfirmedWumpus());
                 if (agent.brain.checkConfirmedWumpus())
                     System.out.println("\nwumpusIndex == " + "(" + agent.brain.getWumpusIndex() / BOARD_SIZE + ", " + agent.brain.getWumpusIndex() % BOARD_SIZE + ").");
@@ -301,7 +303,7 @@ public class Board extends JPanel
             }
             else
             {
-                agent.appendText("\nNew Board!\nCurrent score: " + agent.getScore() + "\n");
+                agent.appendText("\nNew Board!");
                 generateSquares();
                 agent.newBoard();
             }
