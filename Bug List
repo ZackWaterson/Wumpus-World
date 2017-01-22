@@ -3,3 +3,5 @@ Bug in findLeastDangerous() where closest was being improperly set which caused 
 Bug where the agent will shoot the wrong square when going to shoot a confirmed Wumpus.
 
 Bug that is causing findPath() to go into an infinte loop.
+
+Bug that causes a loop on going into least dangerous.
