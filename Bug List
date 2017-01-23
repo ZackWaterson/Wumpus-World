@@ -5,3 +5,5 @@ Bug where the agent will shoot the wrong square when going to shoot a confirmed 
 Bug that is causing findPath() to go into an infinte loop.
 
 Bug that causes a loop on going into least dangerous.
+
+Weird java UI glitch that causes the actionlog to appear at the top of the frame.
