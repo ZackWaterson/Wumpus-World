@@ -17,11 +17,12 @@ public class Board extends JPanel
     //these are the rows of the game board, they are a special class Square that keeps track of
     //many boolean
     private Square[] squares; //a single list of all the arrays for easier iteration
-    private JButton nextButton, resetButton;
+    private JButton nextButton, autoButton, resetButton;
     private JTextArea actionLog;
     JScrollPane scrollPane;
     // a bunch of icons used in the game
     private ImageIcon wumpusIcon, pitIcon, breezeIcon, stenchIcon, glitterIcon;
+    private boolean auto;
     Random random;
     Agent agent;
 
@@ -31,16 +32,24 @@ public class Board extends JPanel
         setLayout(null);
 
         random = new Random();
+        auto = false;
 
         nextButton = new JButton("Next Move");
-        nextButton.setBounds(65, 420, 180, 25);
+        nextButton.setBounds(65, 420, 120, 25);
         nextButton.setMnemonic(KeyEvent.VK_SPACE);
         nextButton.setMnemonic(KeyEvent.VK_SPACE);
         nextButton.addActionListener(new NextMoveListener());
         add(nextButton);
 
+        autoButton = new JButton("Toggle Auto");
+        autoButton.setBounds(205, 420, 120, 25);
+        autoButton.setMnemonic(KeyEvent.VK_SPACE);
+        autoButton.setMnemonic(KeyEvent.VK_SPACE);
+        autoButton.addActionListener(new AutoMoveListener());
+        add(autoButton);
+
         resetButton = new JButton("Reset");
-        resetButton.setBounds(285, 420, 180, 25);
+        resetButton.setBounds(345, 420, 120, 25);
         resetButton.addActionListener(new ResetListener());
         add(resetButton);
 
@@ -238,74 +247,130 @@ public class Board extends JPanel
         return random.nextInt((squares.length) - 1) + 1;
     }
 
+    //function that contains everything that needs to happen for each move
+    public void next()
+    {
+        if(!agent.checkEnd())
+        {
+            agent.makeDecision();
+
+            //I used all these printouts for debugging
+            //they go to the console, not actionLog
+            System.out.println("Stench Array: ");
+            for (int i = 0; i < squares.length; i++)
+            {
+                System.out.print(Integer.toString(agent.brain.stenchArray[i]));
+                if(i%4 < 3)
+                    System.out.print(", ");
+                else
+                    System.out.println();
+            }
+            System.out.println("\n\nBreeze Array:");
+            for (int i = 0; i < squares.length; i++)
+            {
+                System.out.print(Integer.toString(agent.brain.breezeArray[i]));
+                if(i%4 < 3)
+                    System.out.print(", ");
+                else
+                    System.out.println();
+            }
+            System.out.println("\n\nSafe Array: ");
+            for (int i = 0; i < squares.length; i++)
+            {
+                System.out.print(Boolean.toString(agent.brain.safe[i]));
+                if(i%4 < 3)
+                    System.out.print(", ");
+                else
+                    System.out.println();
+            }
+            System.out.println("\n\nVisited Array: ");
+            for (int i = 0; i < squares.length; i++)
+            {
+                System.out.print(Boolean.toString(squares[i].checkVisited()));
+                if(i%4 < 3)
+                    System.out.print(", ");
+                else
+                    System.out.println();
+            }
+            System.out.println("\n\nVisible Array: ");
+            for (int i = 0; i < squares.length; i++)
+            {
+                System.out.print(Boolean.toString(squares[i].checkVisible()));
+                if(i%4 < 3)
+                    System.out.print(", ");
+                else
+                    System.out.println();
+            }
+            System.out.println("\narrow == " + agent.arrow);
+            System.out.println("\nknownWumpus == " + agent.brain.checkConfirmedWumpus());
+            if (agent.brain.checkConfirmedWumpus())
+                System.out.println("\nwumpusIndex == " + "(" + agent.brain.getWumpusIndex() / BOARD_SIZE + ", " + agent.brain.getWumpusIndex() % BOARD_SIZE + ").");
+            System.out.println("\n\n");
+            //repaint();
+        }
+        else
+        {
+            agent.appendText("\nNew Board!");
+            generateSquares();
+            agent.newBoard();
+            //if the game is auto playing we want to wait on the new board for half a second
+            if(auto)
+            {
+                try {
+                    Thread.sleep(500);
+                } catch(InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    //keeps the program doing the next move until it is interrupted
+    public void autoNextThread()
+    {
+        Thread t = new Thread(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                while(auto)
+                {
+                    next();
+                    if(agent.checkEnd())
+                    {
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+                }
+            }
+        });
+        t.start();
+    }
+
+
     //makes the next move when nextButton is clicked
     private class NextMoveListener implements ActionListener
     {
         public void actionPerformed(ActionEvent event)
         {
-            if(!agent.checkEnd())
-            {
-                agent.makeDecision();
+            auto = false;
+            next();
+        }
+    }
 
-                //I used all these printouts for debugging
-                //they go to the console, not actionLog
-                System.out.println("Stench Array: ");
-                for (int i = 0; i < squares.length; i++)
-                {
-                    System.out.print(Integer.toString(agent.brain.stenchArray[i]));
-                    if(i%4 < 3)
-                        System.out.print(", ");
-                    else
-                        System.out.println();
-                }
-                System.out.println("\n\nBreeze Array:");
-                for (int i = 0; i < squares.length; i++)
-                {
-                    System.out.print(Integer.toString(agent.brain.breezeArray[i]));
-                    if(i%4 < 3)
-                        System.out.print(", ");
-                    else
-                        System.out.println();
-                }
-                System.out.println("\n\nSafe Array: ");
-                for (int i = 0; i < squares.length; i++)
-                {
-                    System.out.print(Boolean.toString(agent.brain.safe[i]));
-                    if(i%4 < 3)
-                        System.out.print(", ");
-                    else
-                        System.out.println();
-                }
-                System.out.println("\n\nVisited Array: ");
-                for (int i = 0; i < squares.length; i++)
-                {
-                    System.out.print(Boolean.toString(squares[i].checkVisited()));
-                    if(i%4 < 3)
-                        System.out.print(", ");
-                    else
-                        System.out.println();
-                }
-                System.out.println("\n\nVisible Array: ");
-                for (int i = 0; i < squares.length; i++)
-                {
-                    System.out.print(Boolean.toString(squares[i].checkVisible()));
-                    if(i%4 < 3)
-                        System.out.print(", ");
-                    else
-                        System.out.println();
-                }
-                System.out.println("\narrow == " + agent.arrow);
-                System.out.println("\nknownWumpus == " + agent.brain.checkConfirmedWumpus());
-                if (agent.brain.checkConfirmedWumpus())
-                    System.out.println("\nwumpusIndex == " + "(" + agent.brain.getWumpusIndex() / BOARD_SIZE + ", " + agent.brain.getWumpusIndex() % BOARD_SIZE + ").");
-                System.out.println("\n\n");
-                //repaint();
-            }
+    private class AutoMoveListener implements ActionListener
+    {
+        public void actionPerformed(ActionEvent event)
+        {
+            if (auto)
+                auto = false;
             else
             {
-                agent.appendText("\nNew Board!");
-                generateSquares();
-                agent.newBoard();
+                auto = true;
+                autoNextThread();
             }
         }
     }
@@ -315,6 +380,7 @@ public class Board extends JPanel
     {
         public void actionPerformed(ActionEvent event)
         {
+            auto = false;
             generateSquares();
             newAgent();
             actionLog.setText("Welcome to Wumpus World!\n");

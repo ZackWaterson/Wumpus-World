@@ -71,7 +71,8 @@ public class Agent
 
         if(!end) {
             //first, if it the first turn and the squares are dangerous we just go forward
-            if (brain.checkFirstMove()) {
+            if (brain.checkFirstMove())
+            {
                 if (squares[0].checkStench() && arrow)
                     shoot();
                 else
@@ -219,9 +220,9 @@ public class Agent
             {
                 if (paths.get(i).getTotalCost() < lowestCost)
                 {
-                    System.out.println("Made it in here! Please show this.");
                     lowestCost = paths.get(i).getTotalCost();
                     index = i;
+                    System.out.println(paths.get(i));
                 }
             }
             //checks to see if the lowest cost path has reached our goal
@@ -320,7 +321,7 @@ public class Agent
             appendText(paths.get(i).toString());
         }
         appendText("I am trying to move to (" + endIndex / BOARD_SIZE + ", " + endIndex % BOARD_SIZE + ").");
-        appendText("I am taking : " + shortestPath);
+        appendText("I am taking: " + shortestPath);
         return shortestPath;
     }
 
@@ -559,6 +560,7 @@ public class Agent
         end = true;
         appendText("I died!\n Current score: " + score  + "\nBoards played: " + boardsPlayed
                 + "\nAverage score (per board): " + fmt.format((double)score / boardsPlayed) + "\n");
+        board.paintImmediately(new Rectangle(530, 700));
     }
 
     //appends text to the action log
